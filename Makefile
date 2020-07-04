@@ -44,11 +44,14 @@ clean:
 	$(GO) clean $(GOFLAGS) -i ./...
 	rm -rf $(BIN) $(PKGNAME)_*
 
+.PHONY: test_lint
+test_lint: test lint
+
 .PHONY: test
 test:
 	$(GO) vet $(GOFLAGS) ./...
 	@test -z "$$(gofmt -l *.go)" || (echo "Files need to be linted. Use make fmt" && false)
-	$(GO) test $(GOFLAGS) --race -covermode=atomic . ./pkg/...
+	$(GO) test $(GOFLAGS) ./...
 
 .PHONY: build
 build: $(BIN)
@@ -90,19 +93,9 @@ docker-build:
 	docker cp yay-$(ARCH):/app/${BIN} $(BIN)
 	docker container rm yay-$(ARCH)
 
-.PHONY: test-vendor
-test-vendor: vendor
-	@diff=$$(git diff vendor/); \
-	if [ -n "$$diff" ]; then \
-		echo "Please run 'make vendor' and commit the result:"; \
-		echo "$${diff}"; \
-		exit 1; \
-	fi;
-
 .PHONY: lint
 lint:
-	golangci-lint run
-	golint -set_exit_status . ./pkg/...
+	golangci-lint run ./...
 
 .PHONY: fmt
 fmt:
