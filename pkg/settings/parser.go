@@ -459,6 +459,8 @@ func handleConfig(config *Configuration, option, value string) bool {
 		config.SearchBy = value
 	case "noconfirm":
 		config.NoConfirm = true
+	case "confirm":
+		config.NoConfirm = false
 	case "config":
 		config.PacmanConf = value
 	case "redownload":
@@ -786,21 +788,24 @@ func (a *Arguments) ParseCommandLine(config *Configuration) error {
 		a.Op = "Y"
 	}
 
+	a.extractYayOptions(config)
+
 	if a.ExistsArg("-") {
 		if err := a.parseStdin(); err != nil {
 			return err
 		}
 		a.DelArg("-")
 
-		file, err := os.Open("/dev/tty")
-		if err != nil {
-			return err
-		}
+		if !config.NoConfirm {
+			file, err := os.Open("/dev/tty")
+			if err != nil {
+				return err
+			}
 
-		os.Stdin = file
+			os.Stdin = file
+		}
 	}
 
-	a.extractYayOptions(config)
 	return nil
 }
 
